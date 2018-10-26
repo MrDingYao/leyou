@@ -2,7 +2,6 @@ package com.leyou.item.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import com.leyou.common.pojo.PageResult;
 import com.leyou.item.mapper.BrandMapper;
 import com.leyou.item.pojo.Brand;
@@ -68,9 +67,68 @@ public class BrandServiceImpl implements IBrandService {
     @Override
     public void insertBrand(Brand brand, List<Long> cids) {
         // 先在brand表中增加
-        int row = brandMapper.insertSelective(brand);
+        this.brandMapper.insertSelective(brand);
         // 然后将brand表和category表之间的中间表tb_category_brand添加相对应的数据
-        cids.forEach(c -> brandMapper.insertCategoryBrand(c,brand.getId()));
+        cids.forEach(cid -> this.brandMapper.insertCategoryBrand(cid,brand.getId()));
 
+    }
+
+    /**
+     * 编辑商品品牌
+     * @param brand
+     * @param cids
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void updateBrand(Brand brand, List<Long> cids) {
+        // 先修改brand表中的数据
+        this.brandMapper.updateByPrimaryKeySelective(brand);
+        // 然后修改brand表和category表之间的中间表tb_category_brand
+        // 先删除原来的数据,然后添加进编辑好的数据
+        this.brandMapper.deleteCategoryBrand(brand.getId());
+        cids.forEach( cid -> this.brandMapper.insertCategoryBrand(cid,brand.getId()));
+    }
+
+    /**
+     * 删除商品品牌brand,先删除tb_brand表中的数据,然后删除tb_category_brand中间表的数据
+     * @param bid
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void deleteBrand(Long bid) {
+        // 先删除tb_brand表的数据
+        this.brandMapper.deleteByPrimaryKey(bid);
+        // 然后删除tb_category_brand中间表的数据
+        this.brandMapper.deleteCategoryBrand(bid);
+    }
+
+    /**
+     * 通过分类的id查询下属的品牌
+     * @param cid
+     * @return
+     */
+    @Override
+    public List<Brand> queryBrandsByCid(Long cid) {
+        return this.brandMapper.queryBrandsByCid(cid);
+    }
+
+    /**
+     * 通过品牌id查询品牌
+     * @param brandId
+     * @return
+     */
+    @Override
+    public Brand queryBrandByBid(Long brandId) {
+        return this.brandMapper.selectByPrimaryKey(brandId);
+    }
+
+    /**
+     * 通过品牌id集合批量查询品牌
+     * @param bids
+     * @return
+     */
+    @Override
+    public List<Brand> queryBrandByIds(List<Long> bids) {
+        return this.brandMapper.selectByIdList(bids);
     }
 }

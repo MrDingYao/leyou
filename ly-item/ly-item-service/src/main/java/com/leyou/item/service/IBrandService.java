@@ -32,4 +32,37 @@ public interface IBrandService {
      */
     void insertBrand(Brand brand, List<Long> cids);
 
+    /**
+     * 编辑一个商品品牌
+     * @param brand
+     * @param cids
+     */
+    void updateBrand(Brand brand, List<Long> cids);
+
+    /**
+     * 删除商品品牌brand
+     * @param bid
+     */
+    void deleteBrand(Long bid);
+
+    /**
+     * 通过分类的id查询下属的品牌
+     * @param cid
+     * @return
+     */
+    List<Brand> queryBrandsByCid(Long cid);
+
+    /**
+     * 通过品牌id查询品牌
+     * @param brandId
+     * @return
+     */
+    Brand queryBrandByBid(Long brandId);
+
+    /**
+     * 通过品牌的id集合批量查询品牌
+     * @param bids
+     * @return
+     */
+    List<Brand> queryBrandByIds(List<Long> bids);
 }

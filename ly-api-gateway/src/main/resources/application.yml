@@ -16,7 +16,18 @@ zuul:
   prefix: /api # 添加路由前缀
   retryable: true
   routes:
-    item-service: /item/** # 将商品微服务映射到/item/**
+    item-service: /item/**      # 将商品微服务映射到/item/**
+    search-service: /search/**  # 搜索微服务
+    user-service: /user/**      # 用户微服务
+    auth-service: /auth/**      # 授权中心
+    cart-service: /cart/**      # 购物车
+    order-service: /order/**    # 订单中心
+  ignored-services:
+    - upload-service # 忽略upload-service服务
+  add-host-header: true   # 携带请求本身的host头信息
+  sensitive-headers:      # 禁止使用的头信息，设置为null，否则set-cookie无效
+
+
 ribbon:
   ConnectTimeout: 250 # 连接超时时间(ms)
   ReadTimeout: 2000 # 通信超时时间(ms)
@@ -30,3 +41,15 @@ hystrix:
         isolation:
           thread:
             timeoutInMillisecond: 10000 # 熔断超时时长：10000ms
+ly:
+  jwt:
+    pubKeyPath: C:/Users/santu哥/Documents/RsaKey/rsa.pub # 公钥地址
+    cookieName: LY_TOKEN # cookie的名称
+  filter:
+    allowPaths:
+      - /api/auth
+      - /api/search
+      - /api/user/register
+      - /api/user/check
+      - /api/user/code
+      - /api/item

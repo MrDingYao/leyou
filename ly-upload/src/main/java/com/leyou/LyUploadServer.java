@@ -18,4 +18,6 @@ public class LyUploadServer {
     public static void main(String[] args) {
         SpringApplication.run(LyUploadServer.class, args);
     }
+
+
 }
