@@ -76,4 +76,25 @@ public class CartController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * 点击提交订单后，删除购物车中的商品
+     * @param ids
+     * @return
+     */
+    @DeleteMapping("delete")
+    public ResponseEntity<Void> deleteCarts(@RequestParam("ids") String ids){
+        this.cartService.deleteCarts(ids);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 查询用户购物车中商品的数量
+     * @return
+     */
+    @GetMapping("count")
+    public ResponseEntity<Integer> queryCartCount(){
+        Integer count = this.cartService.queryCartCount();
+        return ResponseEntity.ok(count);
+    }
+
 }

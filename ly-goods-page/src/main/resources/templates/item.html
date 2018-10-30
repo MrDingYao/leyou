@@ -96,9 +96,23 @@
     const specialSpec = JSON.parse(/*[[${spuDetail.specialSpec}]]*/ null);
     const skus = /*[[${skus}]]*/ null;
     const brand = /*[[${brand}]]*/ null;
+
     // 用户选择的sku的规格参数的下标，先进行初始化
+	const name = "indexes";
+    const reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+    const r = window.location.search.substr(1).match(reg);
+    const param = r!=null ? decodeURI(r[2]) : "";
+    const index = param.split("_");
+    const keys = Object.keys(specialSpec);
     const indexes = {};
-    Object.keys(specialSpec).forEach(k => {indexes[k] = 0})
+    const enablesParams = [];
+    for (let i=0;i<keys.length;i++){
+        indexes[keys[i]] = parseInt(index[i]);
+    }
+    skus.forEach(sku => {
+        Object.values(JSON.parse(sku.ownSpec)).forEach(s => enablesParams.push(s));
+
+    })
 
 </script>
 <body>
@@ -204,8 +218,12 @@
 								</div>
 								</dt>
 								<dd v-for="(c,i) in v" :key="i">
-									<a href="javascript:;" :class="{selected: i === indexes[k]}" @click="indexes[k] = i">
-										{{c}}<span title="点击取消选择">&nbsp;</span>
+									<a href="javascript:;"
+									   :class="{selected: i === indexes[k]}"
+									   @click="indexes[k] = i"
+									   >
+										{{c}}<span title="点击取消选择">
+										&nbsp;</span>
 									</a>
 								</dd>
 
@@ -658,11 +676,25 @@
             genericSpec,
 			indexes,			// 用户选择的sku的规格参数下标
 			num:1,			// 用户选择的商品的数量
+			enablesParams
 
         },
         components:{
             lyTop: () => import('/js/pages/top.js')
         },
+
+		/*created(){
+            // 用户选择的sku的规格参数的下标，先进行初始化
+            const index = ly.getUrlParam("indexes").split("_");
+			const keys = Object.keys(this.specialSpec);
+			for (let i=0;i<keys.length;i++){
+			    this.indexes[keys[i]] = index[i];
+			}
+			this.skus.forEach(sku => {
+			    Object.values(JSON.parse(sku.ownSpec)).forEach(s => this.enablesParams.push(s));
+
+			})
+		},*/
 
 		methods:{
             decreaseNum(){
@@ -707,7 +739,12 @@
 					window.location.href= "http://www.leyou.com/cart.html";
 
 				});
-			}
+			},
+
+            // 计算选中的商品的index，是规格那边显示active效果
+            index(k){
+                return JSON.parse(this.sku.ownSpec)[k];
+            }
 		},
 
 		computed:{
@@ -757,7 +794,9 @@
 				const ownSpec = {};
 				keys.forEach(k => ownSpec[this.paramMap[k]] = spec[k]);
 				return ownSpec;
-			}
+			},
+
+
 		}
     });
 </script>

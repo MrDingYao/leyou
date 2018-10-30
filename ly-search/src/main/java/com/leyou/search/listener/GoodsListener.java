@@ -21,7 +21,7 @@ public class GoodsListener {
     private ISearchService searchService;
 
     /**
-     * 处理insert和update消息
+     * 处理insert和update消息，接收spuId
      * @param id
      */
     @RabbitListener(bindings = @QueueBinding(
@@ -39,7 +39,7 @@ public class GoodsListener {
     }
 
     /**
-     * 监听delete消息
+     * 监听delete消息,接收spuId
      * @param id
      */
     @RabbitListener(bindings = @QueueBinding(

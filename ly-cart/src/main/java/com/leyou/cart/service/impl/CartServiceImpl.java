@@ -147,4 +147,34 @@ public class CartServiceImpl implements ICartService {
         BoundHashOperations<String, Object, Object> hashOps = this.redisTemplate.boundHashOps(key);
         hashOps.delete(skuId.toString());
     }
+
+    /**
+     * 删除用户提交订单后的购物车商品
+     * @param ids
+     */
+    @Override
+    public void deleteCarts(String ids) {
+        String[] skuids = ids.split(",");
+        for (String skuid : skuids) {
+            this.deleteCart(Long.parseLong(skuid));
+        }
+    }
+
+    /**
+     * 查询用户购物车中商品的数量
+     * @return
+     */
+    @Override
+    public Integer queryCartCount() {
+        // 先获取当前的用户购物车中的所有商品
+        List<Cart> carts = this.queryCartList();
+        Integer count;
+        if (CollectionUtils.isEmpty(carts)) {
+            count = 0;
+        } else {
+            // 获得所有商品数量之和
+            count = carts.stream().map(Cart::getNum).reduce((n1, n2) -> n1 + n2).get();
+        }
+        return count;
+    }
 }

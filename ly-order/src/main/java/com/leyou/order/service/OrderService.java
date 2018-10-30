@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -42,6 +43,11 @@ public class OrderService {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
+    /**
+     * 生成订单
+     * @param order
+     * @return
+     */
     @Transactional
     public Long createOrder(Order order) {
         // 生成orderId
@@ -75,6 +81,12 @@ public class OrderService {
         return orderId;
     }
 
+
+    /**
+     * 通过订单号查询订单
+     * @param id
+     * @return
+     */
     public Order queryById(Long id) {
         // 查询订单
         Order order = this.orderMapper.selectByPrimaryKey(id);
@@ -91,6 +103,14 @@ public class OrderService {
         return order;
     }
 
+
+    /**
+     * 查询用户的订单,分页查询,查询对应状态的订单
+     * @param page
+     * @param rows
+     * @param status
+     * @return
+     */
     public PageResult<Order> queryUserOrderList(Integer page, Integer rows, Integer status) {
         try {
             // 分页
@@ -100,13 +120,35 @@ public class OrderService {
             // 创建查询条件
             Page<Order> pageInfo = (Page<Order>) this.orderMapper.queryOrderList(user.getId(), status);
 
-            return new PageResult<>(pageInfo.getTotal(), pageInfo);
+            /*Order order = new Order();
+            order.setUserId(user.getId());
+            order.setStatus(status);*/
+            // 查询订单集合
+
+            //Page<Order> pageInfo = (Page<Order>) this.orderMapper.select(order);
+
+            // 遍历，给每个订单添加订单详情和订单状态属性
+            for (Order p : pageInfo) {
+                OrderDetail orderDetail = new OrderDetail();
+                orderDetail.setOrderId(p.getOrderId());
+                // 设置订单详情集合属性
+                p.setOrderDetails(this.detailMapper.select(orderDetail));
+
+            }
+
+            return new PageResult<>(pageInfo.getTotal(), (long) pageInfo.getPages(), pageInfo);
         } catch (Exception e) {
             logger.error("查询订单出错", e);
             return null;
         }
     }
 
+    /**
+     * 更新订单支付状态
+     * @param id
+     * @param status
+     * @return
+     */
     @Transactional
     public Boolean updateStatus(Long id, Integer status) {
         OrderStatus record = new OrderStatus();

@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -62,7 +63,7 @@ public class GoodsController {
      */
     @GetMapping("sku/list")
     public ResponseEntity<List<Sku>> querySkuBySpuId(@RequestParam("id") Long id){
-        List<Sku> skus = this.goodsService.querySkusById(id);
+        List<Sku> skus = this.goodsService.queryAllSkusById(id);
         return ResponseEntity.ok(skus);
     }
 
@@ -145,8 +146,27 @@ public class GoodsController {
      *              TODO 还要删除elasticSearch搜索服务中的数据
      * @return
      */
-    @DeleteMapping
-    public ResponseEntity<Void> deleteGoods(){
-        return null;
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteGoods(@PathVariable("id") Long id){
+        try {
+            this.goodsService.deleteSpuBySpuId(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * 查询spu下的所有有效的sku
+     * @param id
+     * @return
+     */
+    @GetMapping("sku/enabled/{id}")
+    public ResponseEntity<List<Sku>> queryEnabledSkuBySpuId(@PathVariable("id") Long id){
+        List<Sku> skus = this.goodsService.querySkusById(id);
+        if (CollectionUtils.isEmpty(skus)) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return ResponseEntity.ok(skus);
     }
 }

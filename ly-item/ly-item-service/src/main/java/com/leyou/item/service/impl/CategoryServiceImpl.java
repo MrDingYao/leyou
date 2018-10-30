@@ -1,5 +1,6 @@
 package com.leyou.item.service.impl;
 
+import com.leyou.common.utils.JsonUtils;
 import com.leyou.item.mapper.CategoryMapper;
 import com.leyou.item.mapper.SpecParamMapper;
 import com.leyou.item.pojo.Category;
@@ -11,6 +12,8 @@ import com.leyou.item.service.IGoodsService;
 import com.leyou.item.service.ISpecificationService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.BoundHashOperations;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +40,9 @@ public class CategoryServiceImpl implements ICategoryService {
 
     @Autowired
     private IGoodsService goodsService;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     /**
      * 通过父分类id查询其底下的子分类的集合
@@ -103,6 +109,7 @@ public class CategoryServiceImpl implements ICategoryService {
      * 删除分类及其相关联的数据
      * @param id
      */
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void deleteCategory(Long id) {
         // 先删除分类
@@ -115,8 +122,9 @@ public class CategoryServiceImpl implements ICategoryService {
         // 再删除specParam表中的数据
         List<SpecParam> specParams = this.specificationService.querySpecParams(null, id, null, null);
         specParams.forEach(p -> this.specificationService.deleteParam(p.getId()));
-        // 再删除spu表中的数据
+        // 再删除spu表中的数据,修改valid字段属性为0，伪删除
         this.goodsService.deleteSpuByCid(id);
+
     }
 
     /**
@@ -199,5 +207,25 @@ public class CategoryServiceImpl implements ICategoryService {
         Category c2 = this.categoryMapper.selectByPrimaryKey(c3.getParentId());
         Category c1 = this.categoryMapper.selectByPrimaryKey(c2.getParentId());
         return Arrays.asList(c1,c2,c3);
+    }
+
+    /**
+     * 查询所有的分类,使用redis
+     * @return
+     */
+    @Override
+    public List<Category> queryAllCategory() {
+        List<Category> categoryList = new ArrayList<>();
+        // 先从redis中取
+        if (this.redisTemplate.hasKey("categories")) {
+            String categories = this.redisTemplate.opsForValue().get("categories");
+            categoryList = JsonUtils.parseList(categories,Category.class);
+        }else {
+            categoryList = this.categoryMapper.selectAll();
+            this.redisTemplate.opsForValue().set("categories",JsonUtils.serialize(categoryList));
+        }
+
+
+        return categoryList;
     }
 }

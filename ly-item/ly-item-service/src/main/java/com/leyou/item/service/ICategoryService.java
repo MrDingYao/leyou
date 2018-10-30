@@ -72,4 +72,13 @@ public interface ICategoryService {
      * @return
      */
     List<Category> queryAllByCid3(Long id);
+
+
+    /**
+     * 查询所有的分类
+     * @return
+     */
+    List<Category> queryAllCategory();
+
+
 }

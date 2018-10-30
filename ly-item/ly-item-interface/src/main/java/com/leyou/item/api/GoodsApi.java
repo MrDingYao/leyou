@@ -64,4 +64,12 @@ public interface GoodsApi {
      */
     @GetMapping("sku/{id}")
     ResponseEntity<Sku> querySkuBySkuId(@PathVariable("id") Long id);
+
+    /**
+     * 查询spu下的所有有效的sku
+     * @param id
+     * @return
+     */
+    @GetMapping("sku/enabled/{id}")
+    List<Sku> queryEnabledSkuBySpuId(@PathVariable("id") Long id);
 }

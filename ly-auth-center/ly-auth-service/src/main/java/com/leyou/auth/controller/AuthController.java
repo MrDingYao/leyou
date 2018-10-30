@@ -79,5 +79,20 @@ public class AuthController {
         }
     }
 
+    /**
+     * 删除登陆授权，退出登陆
+     * @param token
+     * @param request
+     * @param response
+     * @return
+     */
+    @DeleteMapping
+    public ResponseEntity<Void> deleteToken(@CookieValue(value = "LY_TOKEN",defaultValue = "") String token,
+                                            HttpServletRequest request,
+                                            HttpServletResponse response){
+        // 将cookie时间设置为1秒，相当于删除
+        CookieUtils.setCookie(request, response, props.getCookieName(), token, 1, null, true);
+        return ResponseEntity.ok().build();
+    }
 
 }

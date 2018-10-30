@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -63,6 +64,9 @@ public class CategoryController {
      */
     @PostMapping
     public ResponseEntity<Void> addCategory(Category category){
+        if (StringUtils.isEmpty(category.getName())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         this.categoryService.insertCategory(category);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -73,6 +77,9 @@ public class CategoryController {
      */
     @PutMapping
     public ResponseEntity<Void> editCategory(Category category){
+        if (StringUtils.isEmpty(category.getName())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         this.categoryService.updateCategory(category);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -121,6 +128,19 @@ public class CategoryController {
     @GetMapping("all/level")
     public ResponseEntity<List<Category>> queryAllByCid3(@RequestParam("id") Long id){
         List<Category> categories = this.categoryService.queryAllByCid3(id);
+        if (CollectionUtils.isEmpty(categories)) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return ResponseEntity.ok(categories);
+    }
+
+    /**
+     * 查询所有分类
+     * @return
+     */
+    @GetMapping("all")
+    public ResponseEntity<List<Category>> queryAllCategory(){
+        List<Category> categories = this.categoryService.queryAllCategory();
         if (CollectionUtils.isEmpty(categories)) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }

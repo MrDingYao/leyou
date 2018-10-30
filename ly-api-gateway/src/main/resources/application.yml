@@ -50,6 +50,8 @@ ly:
       - /api/auth
       - /api/search
       - /api/user/register
+      - /api/user/send
       - /api/user/check
       - /api/user/code
+      - /api/user/query
       - /api/item

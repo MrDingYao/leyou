@@ -6,6 +6,7 @@ import com.leyou.common.pojo.PageResult;
 import com.leyou.item.mapper.BrandMapper;
 import com.leyou.item.pojo.Brand;
 import com.leyou.item.service.IBrandService;
+import com.leyou.item.service.IGoodsService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,9 @@ public class BrandServiceImpl implements IBrandService {
 
     @Autowired
     private BrandMapper brandMapper;
+
+    @Autowired
+    private IGoodsService goodsService;
 
     /**
      * 通过前台传递过来的信息查询当前页面要显示的品牌信息,
@@ -100,6 +104,8 @@ public class BrandServiceImpl implements IBrandService {
         this.brandMapper.deleteByPrimaryKey(bid);
         // 然后删除tb_category_brand中间表的数据
         this.brandMapper.deleteCategoryBrand(bid);
+        // 再删除该品牌下的所有商品，spu的valid属性改为0，伪删除
+        this.goodsService.deleteSpuByBid(bid);
     }
 
     /**

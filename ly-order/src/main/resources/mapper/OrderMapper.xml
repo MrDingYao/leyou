@@ -12,10 +12,10 @@
 
     <select id="queryOrderList" resultMap="orderWithDetail">
         SELECT o.order_id,o.actual_pay, o.total_pay,o.create_time, os.status, od.sku_id,
-          od.title ,od.image, od.num , od.own_spec, od.price
+          od.title ,od.image, od.num , od.own_spec, od.price,o.post_fee,od.id
         FROM tb_order o
         LEFT JOIN tb_order_status os ON os.order_id = o.order_id
-        LEFT JOIN tb_order_detail od ON od.order_id = o.order_id
+
         WHERE o.user_id = #{userId}
         <if test="status != null and status != 0">
           AND os.status = #{status}

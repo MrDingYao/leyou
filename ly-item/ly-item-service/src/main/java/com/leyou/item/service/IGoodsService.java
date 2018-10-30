@@ -5,6 +5,7 @@ import com.leyou.item.pojo.Sku;
 import com.leyou.item.pojo.Spu;
 import com.leyou.item.pojo.SpuBo;
 import com.leyou.item.pojo.SpuDetail;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
@@ -66,6 +67,13 @@ public interface IGoodsService {
     void updateGoods(SpuBo spuBo);
 
     /**
+     * 查询spu下的所有的sku，包括逻辑删除的
+     * @param id
+     * @return
+     */
+    List<Sku> queryAllSkusById(Long id);
+
+    /**
      * 上架和下架商品
      * @param id
      */
@@ -84,4 +92,32 @@ public interface IGoodsService {
      * @return
      */
     Sku querySkuBySkuId(Long id);
+
+    /**
+     * 通过品牌id删除商品
+     * @param bid
+     */
+    void deleteSpuByBid(Long bid);
+
+    /**
+     * 更新sku
+     * @param s
+     */
+    void updateSku(Sku s);
+
+    /**
+     * 通过商品的spuId删除商品
+     * @param id
+     */
+    void deleteSpuBySpuId(Long id);
+
+    /**
+     * 发送rabbitMQ消息的方法
+     * @param id
+     * @param type
+     */
+    void sendMessage(Long id,String type);
+
+
+
 }

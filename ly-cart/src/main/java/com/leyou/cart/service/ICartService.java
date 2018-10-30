@@ -34,4 +34,17 @@ public interface ICartService {
      * @param skuId
      */
     void deleteCart(Long skuId);
+
+    /**
+     * 删除用户提交订单后的购物车
+     * @param ids
+     */
+    void deleteCarts(String ids);
+
+    /**
+     * 查询用户购物车中商品的数量
+     * @return
+     */
+    Integer queryCartCount();
+
 }

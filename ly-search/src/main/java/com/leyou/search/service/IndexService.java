@@ -41,7 +41,7 @@ public class IndexService {
         Long id = spu.getId();
         // 1、准备数据
         // sku集合
-        List<Sku> skus = this.goodsClient.querySkuBySpuId(id);
+        List<Sku> skus = this.goodsClient.queryEnabledSkuBySpuId(id);
         // spuDetail
         SpuDetail detail = this.goodsClient.querySpuDetailById(id);
         // 商品分类
@@ -62,6 +62,7 @@ public class IndexService {
             map.put("title", sku.getTitle());
             map.put("image", StringUtils.isBlank(sku.getImages()) ? "" : sku.getImages().split(",")[0]);
             map.put("price", sku.getPrice());
+            map.put("indexes",sku.getIndexes());
             skuList.add(map);
         }
 

@@ -74,14 +74,16 @@ public class GoodsServiceImpl implements IGoodsService {
         // 设置查询条件
         Example example = new Example(Spu.class);
         Example.Criteria criteria = example.createCriteria();
+        // 设置valid属性为true的结果，排除已被删除的商品
+        criteria.andEqualTo("valid",true);
         // 如果saleable不为空，设置上架与否的过滤
         if (saleable != null) {
-            criteria.orEqualTo("saleable", saleable);
+            criteria.andEqualTo("saleable", saleable);
         }
 
         // 如果key不为空，则设置模糊查询，查询标题，分类和品牌
         if (StringUtils.isNotEmpty(key)) {
-            criteria.orLike("title", "%" + key + "%");
+            criteria.andLike("title", "%" + key + "%");
         }
         // 按条件查询出页面信息
         Page<Spu> pageInfo = (Page<Spu>) this.goodsMapper.selectByExample(example);
@@ -105,21 +107,6 @@ public class GoodsServiceImpl implements IGoodsService {
     }
 
     /**
-     * 通过分类cid删除spu,其实是修改valid字段为0，伪删除
-     * @param cid
-     */
-    @Override
-    public void deleteSpuByCid(Long cid){
-        // 查询出关联的spu的集合
-        List<Spu> spus = this.querySpuByCid(cid);
-        // 遍历集合，修改每一个spu的valid属性为0,并更新表的数据
-        spus.forEach(s -> {
-            s.setValid(false);
-            this.goodsMapper.updateByPrimaryKeySelective(s);
-        });
-    }
-
-    /**
      * 通过商品spuId 查询商品详情spuDetail
      * @param id
      * @return
@@ -138,6 +125,7 @@ public class GoodsServiceImpl implements IGoodsService {
     public List<Sku> querySkusById(Long id) {
         Sku sku = new Sku();
         sku.setSpuId(id);
+        sku.setEnable(true);
         List<Sku> skus = this.skuMapper.select(sku);
         if (skus != null && skus.size() != 0) {
             // 同时查询sku的库存stock
@@ -153,12 +141,9 @@ public class GoodsServiceImpl implements IGoodsService {
      */
     @Override
     public List<Spu> querySpuByCid(Long id) {
-        Example example = new Example(Spu.class);
-        Example.Criteria criteria = example.createCriteria();
-        criteria.orEqualTo("cid1",id);
-        criteria.orEqualTo("cid2",id);
-        criteria.orEqualTo("cid3",id);
-        return this.goodsMapper.selectByExample(example);
+        Spu spu = new Spu();
+        spu.setCid3(id);
+        return this.goodsMapper.select(spu);
     }
 
     /**
@@ -197,7 +182,7 @@ public class GoodsServiceImpl implements IGoodsService {
         List<Sku> skus = spuBo.getSkus();
         if (!CollectionUtils.isEmpty(skus)) {
             // spu的id没变，查询原来的skus集合,将原来的所有sku设置成逻辑删除
-            this.querySkusById(spuBo.getId()).stream().peek(s -> s.setEnable(false)).forEach(s -> {
+            this.queryAllSkusById(spuBo.getId()).stream().peek(s -> s.setEnable(false)).forEach(s -> {
                 skuMapper.updateByPrimaryKeySelective(s);
             });
             // 筛选 新修改的sku集合，id为null的新增，id不为null的修改
@@ -222,8 +207,28 @@ public class GoodsServiceImpl implements IGoodsService {
         spuBo.setCreateTime(null);
         spuBo.setValid(null);
         this.goodsMapper.updateByPrimaryKeySelective(spuBo);
+        // 更新spuDetail数据
+        SpuDetail spuDetail = spuBo.getSpuDetail();
+        this.spuDetailMapper.updateByPrimaryKeySelective(spuDetail);
         // 保存完毕后，发送消息
         this.sendMessage(spuBo.getId(),"update");
+    }
+
+    /**
+     * 查询spu下的所有的sku，包含逻辑删除的
+     * @param id
+     * @return
+     */
+    @Override
+    public List<Sku> queryAllSkusById(Long id) {
+        Sku sku = new Sku();
+        sku.setSpuId(id);
+        List<Sku> skus = this.skuMapper.select(sku);
+        if (skus != null && skus.size() != 0) {
+            // 同时查询sku的库存stock
+            skus.forEach(s -> s.setStock(this.stockMapper.selectByPrimaryKey(s.getId()).getStock()));
+        }
+        return skus;
     }
 
     /**
@@ -272,6 +277,9 @@ public class GoodsServiceImpl implements IGoodsService {
         spu.setId(id);
         spu.setSaleable(flag);
         this.goodsMapper.updateByPrimaryKeySelective(spu);
+        // 下架完后，发送rabbitMQ消息，通知其它微服务
+        String type = flag ? "insert" : "delete";
+        this.sendMessage(id,type);
     }
 
     /**
@@ -299,6 +307,7 @@ public class GoodsServiceImpl implements IGoodsService {
      * @param id
      * @param type
      */
+    @Override
     public void sendMessage(Long id,String type){
         try {
             this.amqpTemplate.convertAndSend("item." + type, id);
@@ -306,4 +315,70 @@ public class GoodsServiceImpl implements IGoodsService {
             logger.error("{}:商品消息发送失败，id：{}",type,id,e);
         }
     }
+
+    /**
+     * 更新sku商品
+     * @param s
+     */
+    @Override
+    public void updateSku(Sku s) {
+        this.skuMapper.updateByPrimaryKeySelective(s);
+    }
+
+    /**
+     * 通过商品的spuId 删除商品
+     * @param id
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void deleteSpuBySpuId(Long id) {
+        // 先查询出该商品spu
+        Spu spu = this.querySpuById(id);
+        // 修改valid属性为false，伪删除
+        spu.setValid(false);
+        // 更新表格数据
+        this.goodsMapper.updateByPrimaryKeySelective(spu);
+        // 删除该spu对应的spuDetail数据
+        this.spuDetailMapper.deleteByPrimaryKey(id);
+        // 查询该spu下的所有的sku数据
+        List<Sku> skus = this.querySkusById(id);
+        // 修改sku的enabled 属性为false，伪删除,
+        skus.stream().peek(s -> s.setEnable(false)).forEach(s -> {
+            this.skuMapper.updateByPrimaryKeySelective(s);
+            // 再删除所有sku对应的库存信息
+            this.stockMapper.deleteByPrimaryKey(s.getId());
+        });
+
+        // 发送rabbit MQ消息通知search微服务和goods-page微服务
+        this.sendMessage(id,"delete");
+    }
+
+    /**
+     * 通过分类cid删除spu,其实是修改valid字段为0，伪删除
+     * @param cid
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void deleteSpuByCid(Long cid){
+        // 查询出关联的spu的集合
+        List<Spu> spus = this.querySpuByCid(cid);
+        // 遍历集合，调用删除spu的方法
+        spus.forEach(s -> this.deleteSpuBySpuId(s.getId()));
+    }
+
+    /**
+     * 通过品牌id删除商品
+     * @param bid
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void deleteSpuByBid(Long bid) {
+        Spu spu = new Spu();
+        spu.setBrandId(bid);
+        List<Spu> spus = this.goodsMapper.select(spu);
+        // 遍历集合，调用删除spu的方法
+        spus.forEach(s -> this.deleteSpuBySpuId(s.getId()));
+    }
+
+
 }

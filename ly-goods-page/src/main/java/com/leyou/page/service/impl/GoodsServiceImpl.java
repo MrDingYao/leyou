@@ -50,10 +50,11 @@ public class GoodsServiceImpl implements IGoodsService {
             // 封装spu
             Spu spu = this.goodsClient.querySpuById(id);
             modelMap.put("spu",spu);
+            this.goodsClient.querySpuDetailById(id);
             // 封装spuDetail
             modelMap.put("spuDetail",this.goodsClient.querySpuDetailById(id));
             // 封装skus
-            modelMap.put("skus",this.goodsClient.querySkuBySpuId(id));
+            modelMap.put("skus",this.goodsClient.queryEnabledSkuBySpuId(id));
             // 封装规格组specGroup
             modelMap.put("groups",this.specificationClient.querySpecsByCid(spu.getCid3()));
             // 封装品牌
