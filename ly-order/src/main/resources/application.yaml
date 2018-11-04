@@ -26,7 +26,7 @@ spring:
         initial-interval: 10000ms
         max-interval: 300000ms
         multiplier: 2
-      exchange: ly.item.exchange
+      exchange: ly.cart.exchange
     publisher-confirms: true
   redis:
     host: 192.168.206.66

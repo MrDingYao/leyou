@@ -169,4 +169,61 @@ public class GoodsController {
         }
         return ResponseEntity.ok(skus);
     }
+
+    /**
+     * 删减商品sku的库存
+     * @return
+     */
+    @PutMapping("stock")
+    public ResponseEntity<Boolean> updateStock(@RequestParam("id") Long id,@RequestParam("num") Integer num){
+        Boolean boo = this.goodsService.updateStock(id,num);
+        if (boo) {
+            return ResponseEntity.ok(boo);
+        } else {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(boo);
+        }
+    }
+
+    /**
+     * 通过spuId查询该spu下所有的sku的ownSpec集合
+     * @param id
+     * @return
+     */
+    @GetMapping("sku/ownSpecs/{spuId}")
+    public ResponseEntity<List<String>> queryOwnSpecs(@PathVariable("spuId")Long id){
+        List<String> list = this.goodsService.queryOwnSpecs(id);
+        if(list.size()==0){
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return ResponseEntity.ok(list);
+    }
+
+    /**
+     * 通过spuId查询该spu下所有的sku的indexes集合
+     * @param id
+     * @return
+     */
+    @GetMapping("sku/indexes/{spuId}")
+    public ResponseEntity<List<String>>queryAllIndexes(@PathVariable("spuId")Long id){
+        List<String> list = this.goodsService.queryAllIndexes(id);
+        if(list.size()==0){
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return ResponseEntity.ok(list);
+    }
+
+    /**
+     * 查询skuId集合对应的sku集合
+     * @param ids
+     * @return
+     */
+
+    @PostMapping("sku/ids")
+    public ResponseEntity<List<Sku>> querySkusBySkuIds(@RequestBody List<Long> ids){
+        List<Sku> skus= this.goodsService.querySkusBySkuIds(ids);
+        if (CollectionUtils.isEmpty(skus)) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return ResponseEntity.ok(skus);
+    }
 }

@@ -1,5 +1,7 @@
 package com.leyou.order.pojo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -14,6 +16,7 @@ import java.util.Date;
 public class OrderStatus {
 
     @Id
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long orderId;
     /**
      * 初始阶段：1、未付款、未发货；初始化所有数据

@@ -35,3 +35,8 @@ eureka:
 
 mybatis:
   type-aliases-package: com.leyou.item.pojo
+
+ly:
+  jwt:
+    pubKeyPath: C:/Users/santu哥/Documents/RsaKey/rsa.pub # 公钥地址
+    cookieName: LY_TOKEN  # cookie的名字

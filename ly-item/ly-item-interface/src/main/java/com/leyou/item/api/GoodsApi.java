@@ -8,6 +8,7 @@ import com.leyou.item.pojo.SpuDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -72,4 +73,27 @@ public interface GoodsApi {
      */
     @GetMapping("sku/enabled/{id}")
     List<Sku> queryEnabledSkuBySpuId(@PathVariable("id") Long id);
+
+    /**
+     * 删减商品sku的库存
+     * @return
+     */
+    @PutMapping("stock")
+    Boolean updateStock(@RequestParam("id") Long id,@RequestParam("num") Integer num);
+
+    /**
+     * 通过spuId查询该spu下所有的sku的ownSpec集合
+     * @param id
+     * @return
+     */
+    @GetMapping("sku/ownSpecs/{spuId}")
+    List<String> queryOwnSpecs(@PathVariable("spuId")Long id);
+
+    /**
+     * 通过spuId查询该spu下所有的sku的indexes集合
+     * @param id
+     * @return
+     */
+    @GetMapping("sku/indexes/{spuId}")
+    List<String>queryAllIndexes(@PathVariable("spuId")Long id);
 }

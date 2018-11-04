@@ -1,6 +1,7 @@
 package com.leyou.cart.service;
 
 import com.leyou.cart.pojo.Cart;
+import com.leyou.cart.pojo.Collection;
 
 import java.util.List;
 
@@ -47,4 +48,35 @@ public interface ICartService {
      */
     Integer queryCartCount();
 
+    /**
+     * 查询id集合的最新的商品信息
+     * @param ids
+     * @return
+     */
+    List<Cart> queryCartsByIds(List<Long> ids);
+
+
+    /**
+     * 查询我的收藏
+     * @return
+     */
+    List<Collection> getCollect();
+
+    /**
+     * 购物车的商品添加到我的收藏
+     * @param collect
+     */
+    void addCollection(Collection collect);
+
+    /**
+     * 删除购物车中的商品
+     * @param skuId
+     */
+    void deleteCollect(Long skuId);
+
+    /**
+     * 添加收藏的商品至购物车
+     * @param cart
+     */
+    void addCartFromCollect(Cart cart);
 }

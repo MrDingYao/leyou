@@ -49,9 +49,9 @@ ly:
     allowPaths:
       - /api/auth
       - /api/search
-      - /api/user/register
-      - /api/user/send
       - /api/user/check
-      - /api/user/code
+      - /api/user/send
+      - /api/user/register
       - /api/user/query
       - /api/item
+      - /api/cart/list

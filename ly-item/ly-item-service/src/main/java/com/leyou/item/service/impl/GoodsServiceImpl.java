@@ -380,5 +380,66 @@ public class GoodsServiceImpl implements IGoodsService {
         spus.forEach(s -> this.deleteSpuBySpuId(s.getId()));
     }
 
+    /**
+     * 修改商品库存
+     * @param id
+     * @param num
+     * @return
+     */
+    @Override
+    public Boolean updateStock(Long id, Integer num) {
+        Stock stock = this.stockMapper.selectByPrimaryKey(id);
+        if (stock.getStock() < num) {
+            return false;
+        }
+        stock.setStock(stock.getStock() - num);
+        return this.stockMapper.updateByPrimaryKeySelective(stock) == 1;
+    }
 
+    /**
+     * 通过spuId查询该spu下所有的sku的ownSpec集合
+     * @param id
+     * @return
+     */
+    @Override
+    public List<String> queryOwnSpecs(Long id) {
+
+        Sku sku = new Sku();
+        sku.setSpuId(id);
+        List<Sku> skus = this.skuMapper.select(sku);
+        ArrayList<String> list = new ArrayList<>();
+        for (Sku s : skus) {
+            list.add(s.getOwnSpec());
+        }
+        return list;
+    }
+
+    /**
+     * 通过spuId查询该spu下所有的sku的indexes集合
+     * @param id
+     * @return
+     */
+    @Override
+    public List<String> queryAllIndexes(Long id) {
+        Sku sku = new Sku();
+        sku.setSpuId(id);
+        List<Sku> skus = this.skuMapper.select(sku);
+        ArrayList<String> list = new ArrayList<>();
+        for (Sku s : skus) {
+            list.add(s.getIndexes());
+        }
+        return list;
+    }
+
+    /**
+     * 查询skuId集合对应的sku集合
+     * @param ids
+     * @return
+     */
+    @Override
+    public List<Sku> querySkusBySkuIds(List<Long> ids) {
+        List<Sku> skus = this.skuMapper.selectByIdList(ids);
+
+        return skus;
+    }
 }

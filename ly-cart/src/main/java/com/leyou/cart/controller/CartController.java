@@ -1,10 +1,12 @@
 package com.leyou.cart.controller;
 
 import com.leyou.cart.pojo.Cart;
+import com.leyou.cart.pojo.Collection;
 import com.leyou.cart.service.ICartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -95,6 +97,57 @@ public class CartController {
     public ResponseEntity<Integer> queryCartCount(){
         Integer count = this.cartService.queryCartCount();
         return ResponseEntity.ok(count);
+    }
+
+    /**
+     * 查询传递过来的id集合的商品的最新信息
+     * @return
+     */
+    @GetMapping("list")
+    public ResponseEntity<List<Cart>> queryCartsByIds(List<Long> ids){
+        List<Cart> carts = this.cartService.queryCartsByIds(ids);
+        if (CollectionUtils.isEmpty(carts)) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return ResponseEntity.ok(carts);
+    }
+
+
+
+    /**
+     * 购物车中商品添加到我的收藏
+     * @param collect
+     * @return
+     */
+    @PostMapping("addCollect")
+    public ResponseEntity<Void> addCollection(@RequestBody Collection collect){
+        this.cartService.addCollection(collect);
+        return ResponseEntity.ok().build();
+    }
+    /**
+     * 查询我的收藏
+     * @return
+     */
+    @GetMapping("collect")
+    public ResponseEntity<List<Collection>> getCollect(){
+        List<Collection> collect = this.cartService.getCollect();
+
+        if (null!=collect&&0!=collect.size()){
+            return ResponseEntity.ok(collect);
+        }
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    /**
+     * 添加收藏的商品至购物车
+     * @param cart
+     * @return
+     */
+    @PostMapping("collect2cart")
+    public ResponseEntity<Void> addCartFromCollect(@RequestBody Cart cart){
+        this.cartService.addCartFromCollect(cart);
+        return ResponseEntity.ok().build();
     }
 
 }

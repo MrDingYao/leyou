@@ -1,6 +1,8 @@
 package com.leyou.item.api;
 
 import com.leyou.item.pojo.User;
+import com.leyou.item.pojo.UserInfo;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -8,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
  * @Author santu
  * @Date 2018 - 10 - 22 20:19
  **/
-@RequestMapping
 public interface UserApi {
 
     /**
@@ -20,5 +21,12 @@ public interface UserApi {
     @GetMapping("query")
     User queryUser(@RequestParam("username") String username,
                    @RequestParam("password") String password);
+
+    /**
+     * 查询用户的个人信息
+     * @return
+     */
+    @GetMapping("info")
+    ResponseEntity<UserInfo> queryUserInfo(@RequestParam("id") Long id);
 
 }

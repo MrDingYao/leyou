@@ -5,6 +5,11 @@ import com.github.pagehelper.PageHelper;
 import com.leyou.auth.entity.UserInfo;
 import com.leyou.common.pojo.PageResult;
 import com.leyou.common.utils.IdWorker;
+import com.leyou.item.pojo.Address;
+import com.leyou.item.pojo.Sku;
+import com.leyou.order.client.AddressClient;
+import com.leyou.order.client.GoodsClient;
+import com.leyou.order.client.UserClient;
 import com.leyou.order.interceptor.LoginInterceptor;
 import com.leyou.order.mapper.OrderDetailMapper;
 import com.leyou.order.mapper.OrderMapper;
@@ -14,10 +19,12 @@ import com.leyou.order.pojo.OrderDetail;
 import com.leyou.order.pojo.OrderStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -41,6 +48,18 @@ public class OrderService {
     @Autowired
     private OrderStatusMapper statusMapper;
 
+    @Autowired
+    private GoodsClient goodsClient;
+
+    @Autowired
+    private UserClient userClient;
+
+    @Autowired
+    private AddressClient addressClient;
+
+    @Autowired
+    private AmqpTemplate amqpTemplate;
+
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
     /**
@@ -52,14 +71,50 @@ public class OrderService {
     public Long createOrder(Order order) {
         // 生成orderId
         long orderId = idWorker.nextId();
+        order.setOrderId(orderId);
+        // 计算总价
+        Long totalPrice = 0L;
+        // 获取商品详情
+        List<OrderDetail> orderDetails = order.getOrderDetails();
+        for (OrderDetail d : orderDetails) {
+            Sku sku = this.goodsClient.querySkuBySkuId(d.getSkuId()).getBody();
+            d.setOrderId(orderId);
+            String image = StringUtils.isEmpty(sku.getImages()) ? "" : sku.getImages().split(",")[0];
+            d.setImage(image);
+            d.setPrice(sku.getPrice());
+            d.setTitle(sku.getTitle());
+            totalPrice += sku.getPrice()*d.getNum();
+
+            // 调用商品微服务,删减库存
+            Boolean boo = this.goodsClient.updateStock(sku.getId(), d.getNum());
+            if (!boo) {
+                throw new RuntimeException();
+            }
+        }
+        order.setTotalPay(totalPrice);
+        order.setActualPay(totalPrice);
         // 获取登录用户
         UserInfo user = LoginInterceptor.getLoginUser();
-        // 初始化数据
-        order.setBuyerNick(user.getUsername());
+        // 获取用户的昵称信息
+        String nickName;
+        ResponseEntity<com.leyou.item.pojo.UserInfo> responseEntity = this.userClient.queryUserInfo(LoginInterceptor.getLoginUser().getId());
+        if (!responseEntity.hasBody()) {
+            nickName = user.getUsername();
+        } else {
+            nickName = responseEntity.getBody().getNickname();
+        }
+        order.setBuyerNick(nickName);
         order.setBuyerRate(false);
         order.setCreateTime(new Date());
-        order.setOrderId(orderId);
         order.setUserId(user.getId());
+        // 获取地址数据
+        Address address = this.addressClient.queryAddressById(order.getAddressId());
+        String[] split = address.getAreaAddress().split("-");
+        order.setReceiverState(split[0]);
+        order.setReceiverCity(split[1]);
+        order.setReceiverDistrict(split[2]);
+        order.setReceiverAddress(address.getDetailAddress());
+        order.setReceiverZip(address.getReceiveZip());
         // 保存数据
         this.orderMapper.insertSelective(order);
 
@@ -68,13 +123,13 @@ public class OrderService {
         orderStatus.setOrderId(orderId);
         orderStatus.setCreateTime(order.getCreateTime());
         orderStatus.setStatus(1);// 初始状态为未付款
-
         this.statusMapper.insertSelective(orderStatus);
 
-        // 订单详情中添加orderId
-        order.getOrderDetails().forEach(od -> od.setOrderId(orderId));
         // 保存订单详情,使用批量插入功能
         this.detailMapper.insertList(order.getOrderDetails());
+
+        // 发送mq消息通知购物车服务删除购物车中的商品
+        orderDetails.forEach(d -> this.sendMessage(d.getSkuId(),"delete"));
 
         logger.debug("生成订单，订单编号：{}，用户id：{}", orderId, user.getId());
 
@@ -91,6 +146,10 @@ public class OrderService {
         // 查询订单
         Order order = this.orderMapper.selectByPrimaryKey(id);
 
+        if (order == null) {
+            return null;
+        }
+
         // 查询订单详情
         OrderDetail detail = new OrderDetail();
         detail.setOrderId(id);
@@ -100,6 +159,7 @@ public class OrderService {
         // 查询订单状态
         OrderStatus status = this.statusMapper.selectByPrimaryKey(order.getOrderId());
         order.setStatus(status.getStatus());
+        order.setOrderStatus(status);
         return order;
     }
 
@@ -120,9 +180,6 @@ public class OrderService {
             // 创建查询条件
             Page<Order> pageInfo = (Page<Order>) this.orderMapper.queryOrderList(user.getId(), status);
 
-            /*Order order = new Order();
-            order.setUserId(user.getId());
-            order.setStatus(status);*/
             // 查询订单集合
 
             //Page<Order> pageInfo = (Page<Order>) this.orderMapper.select(order);
@@ -133,7 +190,8 @@ public class OrderService {
                 orderDetail.setOrderId(p.getOrderId());
                 // 设置订单详情集合属性
                 p.setOrderDetails(this.detailMapper.select(orderDetail));
-
+                // 查询订单状态
+                p.setOrderStatus(this.statusMapper.selectByPrimaryKey(p.getOrderId()));
             }
 
             return new PageResult<>(pageInfo.getTotal(), (long) pageInfo.getPages(), pageInfo);
@@ -176,6 +234,19 @@ public class OrderService {
         }
         int count = this.statusMapper.updateByPrimaryKeySelective(record);
         return count == 1;
+    }
+
+    /**
+     * 当对商品进行增删改后，调用该方法发送消息
+     * @param id
+     * @param type
+     */
+    public void sendMessage(Long id,String type){
+        try {
+            this.amqpTemplate.convertAndSend("cart." + type, id);
+        } catch (Exception e) {
+            logger.error("{}:商品消息发送失败，id：{}",type,id,e);
+        }
     }
 
 }

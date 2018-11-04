@@ -152,7 +152,7 @@ public class SpecificationServiceImpl implements ISpecificationService {
                 // 修改拥有该参数的spu商品的genericSpec属性
                 // 遍历，将通用参数属性中含有该规格参数的删除，然后更新
 
-                spuDetails.forEach(s -> {
+                for (SpuDetail s : spuDetails) {
                     String genericSpec = s.getGenericSpec();
                     Map<Long, Object> genericMap = JsonUtils.parseMap(genericSpec, Long.class, Object.class);
                     Set<Long> keys = genericMap.keySet();
@@ -160,8 +160,9 @@ public class SpecificationServiceImpl implements ISpecificationService {
                         genericMap.remove(id);
                         s.setGenericSpec(JsonUtils.serialize(genericMap));
                         this.spuDetailService.updateSpuDetail(s);
+                        break;
                     }
-                });
+                }
             } else {
                 // 如果是特有参数,需要修改拥有该参数的spu和sku
                 // 修改商品详情数据

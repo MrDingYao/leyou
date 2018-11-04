@@ -118,6 +118,32 @@ public interface IGoodsService {
      */
     void sendMessage(Long id,String type);
 
+    /**
+     * 修改商品库存
+     * @param id
+     * @param num
+     * @return
+     */
+    Boolean updateStock(Long id, Integer num);
 
+    /**
+     * 通过spuId查询该spu下所有的sku的ownSpec集合
+     * @param id
+     * @return
+     */
+    List<String> queryOwnSpecs(Long id);
 
+    /**
+     * 通过spuId查询该spu下所有的sku的indexes集合
+     * @param id
+     * @return
+     */
+    List<String> queryAllIndexes(Long id);
+
+    /**
+     * 查询skuId集合对应的sku集合
+     * @param ids
+     * @return
+     */
+    List<Sku> querySkusBySkuIds(List<Long> ids);
 }

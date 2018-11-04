@@ -1,18 +1,21 @@
 package com.leyou.order.pojo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
 @Table(name = "tb_order")
-public class Order {
+public class Order implements Serializable {
 
     @Id
+    @JsonFormat(shape = JsonFormat.Shape.STRING)        // 处理Long类型值传递至前台精度丢失
     private Long orderId;// id
-    @NotNull
+
     private Long totalPay;// 总金额
-    @NotNull
+
     private Long actualPay;// 实付金额
     @NotNull
     private Integer paymentType; // 支付类型，1、在线支付，2、货到付款
@@ -40,7 +43,13 @@ public class Order {
     private List<OrderDetail> orderDetails;
 
     @Transient
+    private OrderStatus orderStatus;
+
+    @Transient
     private Integer status;
+
+    @Transient
+    private Long addressId;
 
     public Long getOrderId() {
         return orderId;
@@ -232,5 +241,21 @@ public class Order {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    public Long getAddressId() {
+        return addressId;
+    }
+
+    public void setAddressId(Long addressId) {
+        this.addressId = addressId;
     }
 }

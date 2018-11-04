@@ -211,13 +211,20 @@
 					<div class="clearfix choose">
 						<div id="specification" class="summary-wrap clearfix">
 							<!-- 遍历specialSpec显示规格选择项 -->
-							<dl v-for="(v,k) in specialSpec" :key="k">
+							<dl v-for="(value,key) in specialSpec" :key="key">
 								<dt>
 									<div class="fl title">
-									<i v-text="paramMap[k]"></i>
+									<i v-text="paramMap[key]"></i>
 								</div>
 								</dt>
-								<dd v-for="(c,i) in v" :key="i">
+								<dd v-for="(v,i) in value" :key="i">
+									<a href="javascript:;" :class="{selected: i===indexes[key],locked: !flag(v)}"
+									   @click="ownSpecClick(v,i,key)">
+										<!--indexes[key] = i-->
+										{{v}}<span title="点击取消选择">&nbsp;</span>
+									</a>
+								</dd>
+								<!--<dd v-for="(c,i) in v" :key="i">
 									<a href="javascript:;"
 									   :class="{selected: i === indexes[k]}"
 									   @click="indexes[k] = i"
@@ -225,7 +232,7 @@
 										{{c}}<span title="点击取消选择">
 										&nbsp;</span>
 									</a>
-								</dd>
+								</dd>-->
 
 							</dl>
 							<!--<dl>
@@ -676,25 +683,31 @@
             genericSpec,
 			indexes,			// 用户选择的sku的规格参数下标
 			num:1,			// 用户选择的商品的数量
-			enablesParams
+			enablesParams,
+
+            ownSpecs:[],
+            existSpec:[],
+            existIndexes:[],
+            spu
 
         },
         components:{
             lyTop: () => import('/js/pages/top.js')
         },
 
-		/*created(){
-            // 用户选择的sku的规格参数的下标，先进行初始化
-            const index = ly.getUrlParam("indexes").split("_");
-			const keys = Object.keys(this.specialSpec);
-			for (let i=0;i<keys.length;i++){
-			    this.indexes[keys[i]] = index[i];
-			}
-			this.skus.forEach(sku => {
-			    Object.values(JSON.parse(sku.ownSpec)).forEach(s => this.enablesParams.push(s));
-
-			})
-		},*/
+        created(){
+            ly.http.get("/item/sku/ownSpecs/"+this.spu.id).then(Resp=>{
+                this.ownSpecs=Resp.data.map(v=>JSON.parse(v));
+                this.ownSpecs.forEach(o=>{
+                    this.existSpec.push(o["4"]);
+                    this.existSpec.push(o["12"]);
+                    this.existSpec.push(o["13"]);
+                })
+            });
+            ly.http.get("/item/sku/indexes/"+this.spu.id).then(resp=>{
+                this.existIndexes=resp.data;
+            })
+        },
 
 		methods:{
             decreaseNum(){
@@ -729,7 +742,8 @@
 							price:this.sku.price,
 							image:this.images[0],
 							ownSpec:JSON.stringify(this.ownSpec),
-							num:this.num
+							num:this.num,
+							enable:this.sku.enable
 						}
 						carts.push(cart)
                     }
@@ -744,7 +758,68 @@
             // 计算选中的商品的index，是规格那边显示active效果
             index(k){
                 return JSON.parse(this.sku.ownSpec)[k];
-            }
+            },
+
+			// 不可点击的判断
+            flag(v){
+                return this.existSpec.includes(v);
+            },
+
+            //key:12,i:0,v:4GB
+            ownSpecClick(v, i, key) {
+
+                const f = Object;
+                Object.assign(f,this.indexes);
+                f[key]=i;
+                this.existSpec=[];
+                this.ownSpecs.forEach(o=>{
+                    this.existSpec.push(o[key]);
+                    if(o[key]===v){
+                        this.existSpec.push(o[4]);
+                        this.existSpec.push(o[12]);
+                        this.existSpec.push(o[13]);
+                    }
+                });
+                /**
+                 * existIndexes:[
+                 * "0_0_0",
+                 * "0_1_0"
+                 * ...
+                 * ]
+                 * @type {string}
+                 */
+                let index = Object.values(f).join("_"); // 选择的index 1_0_0
+                if(this.existIndexes.includes(index)){
+                    this.indexes[key] = i;
+                }else{
+                    let existIndexes1=[];
+
+                    this.existIndexes.forEach(m=>{
+                        console.log(m.toString());
+                        const b = m.split("_");
+                        console.log("b的值=["+b[0]+","+b[1]+","+b[2]+"]");
+                        existIndexes1.push({4:b[0],12:b[1],13:b[2]})
+                    });
+                    console.log(existIndexes1[0]);
+                    console.log("i的值是"+i+","+"key的值是"+key);
+                    existIndexes1.forEach(o=>{
+                        console.log("o的值="+o["4"]+","+o["12"]+","+o["13"]);
+                        console.log("o[key]的值是"+o[key]);
+                        if(o[key]==i){
+                            this.indexes["4"]=o["4"];
+                            this.indexes["12"]=o["12"];
+                            this.indexes["13"]=o["13"];
+                            console.log("循环内indexes的值="+this.indexes["4"]+","+this.indexes["12"]+","+this.indexes["13"]);
+                            console.log("进入方法");
+                        }
+                        // o[key]==i?console.log("进入方法"):console.log("不相等");
+                    });
+                    console.log("indexes的值="+this.indexes["4"]+","+this.indexes["12"]+","+this.indexes["13"]);
+                    // this.indexes["4"]=2;
+                    // this.indexes["12"]=1;
+                    // this.indexes["13"]=1;
+                }
+            },
 		},
 
 		computed:{

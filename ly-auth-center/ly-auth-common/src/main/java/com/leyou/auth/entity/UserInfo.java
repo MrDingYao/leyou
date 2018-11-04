@@ -1,10 +1,13 @@
 package com.leyou.auth.entity;
 
+import lombok.ToString;
+
 /**
  * @Description //TODO
  * @Author santu
  * @Date 2018 - 10 - 22 18:46
  **/
+@ToString
 public class UserInfo {
 
     private Long id;

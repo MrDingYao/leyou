@@ -24,5 +24,7 @@ public class Cart {
 
     private String ownSpec;
 
+    private Boolean enable;
+
 
 }

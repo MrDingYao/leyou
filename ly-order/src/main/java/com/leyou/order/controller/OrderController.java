@@ -2,6 +2,7 @@ package com.leyou.order.controller;
 
 import com.leyou.common.pojo.PageResult;
 import com.leyou.order.pojo.Order;
+import com.leyou.order.pojo.OrderBo;
 import com.leyou.order.service.OrderService;
 import com.leyou.utils.PayHelper;
 import com.leyou.utils.PayState;
@@ -40,6 +41,9 @@ public class OrderController {
     @ApiImplicitParam(name = "order", required = true, value = "订单的json对象,包含订单条目和物流信息")
     public ResponseEntity<Long> createOrder(@RequestBody @Valid Order order) {
         Long id = this.orderService.createOrder(order);
+        if (id == null) {
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
+        }
         return new ResponseEntity<>(id, HttpStatus.CREATED);
     }
 

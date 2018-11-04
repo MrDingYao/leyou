@@ -3,16 +3,15 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.leyou.order.mapper.OrderMapper">
 
-    <resultMap id="orderWithDetail" type="com.leyou.order.pojo.Order" autoMapping="true">
+   <!-- <resultMap id="orderWithDetail" type="com.leyou.order.pojo.Order" autoMapping="true">
         <id column="order_id" property="orderId" />
         <collection property="orderDetails" javaType="List" ofType="com.leyou.order.pojo.OrderDetail" autoMapping="true">
             <id property="id" column="id" />
         </collection>
-    </resultMap>
+    </resultMap>-->
 
-    <select id="queryOrderList" resultMap="orderWithDetail">
-        SELECT o.order_id,o.actual_pay, o.total_pay,o.create_time, os.status, od.sku_id,
-          od.title ,od.image, od.num , od.own_spec, od.price,o.post_fee,od.id
+    <select id="queryOrderList" resultType="com.leyou.order.pojo.Order">
+        SELECT o.order_id,o.actual_pay, o.total_pay,o.create_time, os.status,o.post_fee
         FROM tb_order o
         LEFT JOIN tb_order_status os ON os.order_id = o.order_id
 

@@ -1,6 +1,7 @@
 package com.leyou.user.service;
 
 import com.leyou.item.pojo.User;
+import com.leyou.item.pojo.UserInfo;
 
 /**
  * @Description //TODO
@@ -40,5 +41,45 @@ public interface IUserService {
      */
     User queryUser(String username, String password);
 
+    /**
+     * 查询用户的个人信息
+     * @return
+     */
+    UserInfo queryUserInfo(Long id);
+
+    /**
+     * 保存用户的个人信息
+     * @param userInfo
+     */
+    void updateUserInfo(UserInfo userInfo);
+
+    /**
+     * 查询当前用户绑定的手机
+     * @return
+     */
+    String queryUserPhone();
+
+    /**
+     * 校验用户输入的验证码
+     * @param code
+     * @return
+     */
+    Boolean checkVerifyCode(String phone,String code);
+
+    /**
+     * 修改用户绑定的手机
+     * @param newPhone
+     * @return
+     */
+    Boolean changePhone(String newPhone);
+
+    /**
+     * 修改用户的密码
+     * @param newPassword
+     * @return
+     */
+    Boolean changePassword(String newPassword);
+
+    UserInfo queryUserInfo();
 
 }
