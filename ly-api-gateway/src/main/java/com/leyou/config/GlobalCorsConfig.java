@@ -4,7 +4,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
@@ -24,7 +23,7 @@ public class GlobalCorsConfig {
         CorsConfiguration config = new CorsConfiguration();
         // 允许的域,不能写*,否则不能添加cookie
         config.addAllowedOrigin("http://manage.leyou.com");
-        config.addAllowedOrigin("http://www.leyou.com");
+//        config.addAllowedOrigin("http://www.leyou.com");
         // 是否允许添加cookie
         config.setAllowCredentials(true);
         // 允许的请求方法

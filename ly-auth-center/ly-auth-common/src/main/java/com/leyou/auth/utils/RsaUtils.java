@@ -96,4 +96,10 @@ public class RsaUtils {
         }
         Files.write(dest.toPath(), bytes);
     }
+
+    public static void main(String[] args) throws Exception {
+        String publicKeyFile = "C:\\Users\\dy181\\Documents\\RsaKey\\rsa.pub";
+        String privateKeyFile = "C:\\Users\\dy181\\Documents\\RsaKey\\rsa.pri";
+        generateKey(publicKeyFile,privateKeyFile,"dingyao");
+    }
 }

@@ -43,7 +43,7 @@ hystrix:
             timeoutInMillisecond: 10000 # 熔断超时时长：10000ms
 ly:
   jwt:
-    pubKeyPath: C:/Users/santu哥/Documents/RsaKey/rsa.pub # 公钥地址
+    pubKeyPath: C:/Users/dy181/Documents/RsaKey/rsa.pub # 公钥地址
     cookieName: LY_TOKEN # cookie的名称
   filter:
     allowPaths:
@@ -55,3 +55,6 @@ ly:
       - /api/user/query
       - /api/item
       - /api/cart/list
+logging:
+  level:
+    root: warn
