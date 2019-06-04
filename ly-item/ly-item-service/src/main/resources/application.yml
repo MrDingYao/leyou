@@ -5,24 +5,24 @@ spring:
     name: item-service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/leyou?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&useSSL=false
+    url: jdbc:mysql://47.101.138.105:3306/leyou?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&useSSL=false
     username: root
-    password: 111
-  redis:
-    host: 192.168.206.66
-  rabbitmq:
-    host: 192.168.206.66
-    username: /leyou
-    password: 123
-    virtual-host: /leyou
-    template:
-      retry:
-        enabled: true
-        initial-interval: 10000ms
-        max-interval: 300000ms
-        multiplier: 2
-      exchange: ly.item.exchange
-    publisher-confirms: true
+    password: 123456
+#  redis:
+#    host: 192.168.206.66
+#  rabbitmq:
+#    host: 192.168.206.66
+#    username: /leyou
+#    password: 123
+#    virtual-host: /leyou
+#    template:
+#      retry:
+#        enabled: true
+#        initial-interval: 10000ms
+#        max-interval: 300000ms
+#        multiplier: 2
+#      exchange: ly.item.exchange
+#    publisher-confirms: true
 
 eureka:
   client:
